@@ -1,0 +1,150 @@
+{
+ "source": "驾考宝典 (jiakaobaodian.com) via api2.jiakaobaodian.com",
+ "crawled": "2026-11-16",
+ "sets": {
+  "bus-kemu1": {
+   "carType": "bus",
+   "carName": "客车",
+   "course": "kemu1",
+   "courseName": "科目一",
+   "questions": 2363,
+   "types": {
+    "单选题": 1200,
+    "判断题": 1163
+   }
+  },
+  "bus-kemu3": {
+   "carType": "bus",
+   "carName": "客车",
+   "course": "kemu3",
+   "courseName": "科目四",
+   "questions": 747,
+   "types": {
+    "判断题": 459,
+    "单选题": 288
+   }
+  },
+  "car-kemu1": {
+   "carType": "car",
+   "carName": "小车(C1/C2/C3)",
+   "course": "kemu1",
+   "courseName": "科目一",
+   "questions": 1702,
+   "types": {
+    "单选题": 916,
+    "判断题": 786
+   }
+  },
+  "car-kemu3": {
+   "carType": "car",
+   "carName": "小车(C1/C2/C3)",
+   "course": "kemu3",
+   "courseName": "科目四",
+   "questions": 1416,
+   "types": {
+    "判断题": 988,
+    "单选题": 428
+   }
+  },
+  "chuzu-zigezheng": {
+   "carType": "chuzu",
+   "carName": "出租车",
+   "course": "zigezheng",
+   "courseName": "从业资格证",
+   "questions": 500,
+   "types": {
+    "判断题": 260,
+    "单选题": 240
+   }
+  },
+  "huoyun-zigezheng": {
+   "carType": "huoyun",
+   "carName": "货运",
+   "course": "zigezheng",
+   "courseName": "从业资格证",
+   "questions": 1078,
+   "types": {
+    "判断题": 759,
+    "单选题": 319
+   }
+  },
+  "jiaolian-zigezheng": {
+   "carType": "jiaolian",
+   "carName": "教练员",
+   "course": "zigezheng",
+   "courseName": "从业资格证",
+   "questions": 1465,
+   "types": {
+    "判断题": 1005,
+    "单选题": 460
+   }
+  },
+  "keyun-zigezheng": {
+   "carType": "keyun",
+   "carName": "客运",
+   "course": "zigezheng",
+   "courseName": "从业资格证",
+   "questions": 1963,
+   "types": {
+    "判断题": 1346,
+    "单选题": 617
+   }
+  },
+  "moto-kemu1": {
+   "carType": "moto",
+   "carName": "摩托车",
+   "course": "kemu1",
+   "courseName": "科目一",
+   "questions": 513,
+   "types": {
+    "单选题": 261,
+    "判断题": 252
+   }
+  },
+  "moto-kemu3": {
+   "carType": "moto",
+   "carName": "摩托车",
+   "course": "kemu3",
+   "courseName": "科目四",
+   "questions": 383,
+   "types": {
+    "单选题": 168,
+    "判断题": 215
+   }
+  },
+  "truck-kemu1": {
+   "carType": "truck",
+   "carName": "货车(A2/B2)",
+   "course": "kemu1",
+   "courseName": "科目一",
+   "questions": 2422,
+   "types": {
+    "单选题": 1217,
+    "判断题": 1205
+   }
+  },
+  "truck-kemu3": {
+   "carType": "truck",
+   "carName": "货车(A2/B2)",
+   "course": "kemu3",
+   "courseName": "科目四",
+   "questions": 2848,
+   "types": {
+    "判断题": 1949,
+    "单选题": 899
+   }
+  },
+  "weixian-zigezheng": {
+   "carType": "weixian",
+   "carName": "危化品",
+   "course": "zigezheng",
+   "courseName": "从业资格证",
+   "questions": 529,
+   "types": {
+    "单选题": 232,
+    "判断题": 297
+   }
+  }
+ },
+ "mediaImages": 1958
+}
