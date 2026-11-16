@@ -4,6 +4,7 @@ probe.py — fail fast if the Chinese endpoints are unreachable from the runner
 or start rejecting the _r signature. Runs before the ~40 min crawl.
 """
 import json
+import os
 import random
 import sys
 import time
@@ -45,24 +46,41 @@ def probe(name, url, params):
     return ok
 
 
+def media_probe():
+    """Fetch the first real image from the manifest — a 403 on the CDN root is normal,
+    a 403 on an object means the runner's IP is being blocked."""
+    path = os.path.join(os.environ.get("JIAKAO_REPO", "."), "clean", "media-manifest.json")
+    url = None
+    if os.path.exists(path):
+        keys = sorted(json.load(open(path)))
+        if keys:
+            url = keys[0]
+    if not url:
+        print("WARN no media-manifest.json — skipping image check")
+        return True
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA,
+                                                   "Referer": "https://www.jiakaobaodian.com/"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            blob = resp.read(2048)
+            print(f"OK   media object: HTTP {resp.status}, {len(blob)} bytes, "
+                  f"{resp.headers.get('Content-Type')}")
+            return len(blob) > 0
+    except Exception as e:  # noqa: BLE001
+        print(f"FAIL media object: {e}")
+        return False
+
+
 def main():
     checks = [
         ("api2 list-by-tag", "https://api2.jiakaobaodian.com/api/open/question/list-by-tag.htm",
          {"cityCode": "511300", "course": "kemu1", "tagId": 1, "carType": "car"}),
         ("tiku list-chapter", "https://jk-tiku.kakamobi.cn/api/web/practise/list-chapter.htm",
          {"carType": "car", "course": "kemu1", "cityCode": "110000"}),
-        ("media CDN", "https://jiakao-tiku.mc-cdn.cn/", {}),
     ]
-    results = [probe(*c) for c in checks[:2]]
-    # media CDN: only needs to answer at all; 404 on the root path is fine
-    try:
-        req = urllib.request.Request(checks[2][1], headers={"User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            print(f"OK   media CDN: HTTP {resp.status}")
-            results.append(True)
-    except Exception as e:  # noqa: BLE001
-        print(f"WARN media CDN unreachable ({e}) — images will fail, questions still OK")
-    if not all(results[:2]):
+    results = [probe(*c) for c in checks]
+    results.append(media_probe())
+    if not all(results):
         print("PROBE FAILED — GitHub runner cannot reach the API. Do not crawl.")
         sys.exit(1)
     print("PROBE OK")

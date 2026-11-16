@@ -64,7 +64,7 @@ jobs:
 
       - name: 下载新增配图（已有文件自动跳过）
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
-        run: python3 crawl_media.py
+        run: python3 crawl_media.py --prune
 
       - name: 有变更才提交
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}

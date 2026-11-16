@@ -11,10 +11,12 @@ Output: ~/jiakao/repo/
   index.json                        per-set stats
 """
 import glob
+import hashlib
 import json
 import os
 import re
 import time
+import urllib.parse
 from collections import Counter
 
 DATA = os.path.expanduser(os.environ.get("JIAKAO_DATA", "~/jiakao/data"))
@@ -45,18 +47,21 @@ def to_answer_letters(bits):
     return [letter for bit, letter in ANSWER_BITS if bits & bit]
 
 
+def media_relpath(url, basename_counts):
+    """Stable repo-relative path. CDN reuses filenames (image-24.jpg) across date
+    directories for *different* images, so colliding basenames get a URL hash."""
+    base = os.path.basename(urllib.parse.urlparse(url).path) or "x"
+    if basename_counts[base] > 1:
+        key = hashlib.sha1(url.encode()).hexdigest()[:10]
+        return f"media/{key[0]}/{key}-{base}"
+    return f"media/{base[0].lower()}/{base}"
+
+
 def qid_key(r):
     try:
         return int(r.get("questionId") or r.get("id") or 0)
     except (TypeError, ValueError):
         return 0
-
-
-def count_media_files():
-    n = 0
-    for _, _, files in os.walk(os.path.join(REPO, "media")):
-        n += sum(1 for f in files if not f.endswith(".part"))
-    return n
 
 
 def update_readme(index, total, media_files):
@@ -82,7 +87,7 @@ def update_readme(index, total, media_files):
 def main():
     index = {"source": "驾考宝典 (jiakaobaodian.com) via api2.jiakaobaodian.com",
              "crawled": TODAY, "sets": {}}
-    media_manifest = {}
+    media_counts = Counter()
     chapter_titles = {}
 
     # chapter titles from meta files
@@ -107,9 +112,7 @@ def main():
             letters = to_answer_letters(r.get("answer") or 0)
             media = r.get("mediaContent") or ""
             if media:
-                media_manifest[media] = media_manifest.get(media, 0) + 1
-                if media not in media_manifest or isinstance(media_manifest[media], int):
-                    pass
+                media_counts[media] += 1
             rec = {
                 "id": qid,
                 "carType": car_type,
@@ -137,6 +140,9 @@ def main():
         }
         print(f"{name}: {len(seen)} questions ({dict(stats)})")
 
+    basename_counts = Counter(os.path.basename(urllib.parse.urlparse(u).path) for u in media_counts)
+    media_manifest = {u: {"file": media_relpath(u, basename_counts), "count": c}
+                      for u, c in sorted(media_counts.items())}
     json.dump(media_manifest, open(os.path.join(REPO, "clean", "media-manifest.json"), "w"),
               ensure_ascii=False, indent=1)
     index["mediaImages"] = len(media_manifest)
@@ -144,7 +150,8 @@ def main():
     print(f"distinct media files: {len(media_manifest)}")
     total = sum(s["questions"] for s in index["sets"].values())
     print("total:", total)
-    update_readme(index, total, count_media_files())
+    # count distinct local image files, not URLs: colliding CDN basenames were split
+    update_readme(index, total, len({v["file"] for v in media_manifest.values()}))
 
 
 if __name__ == "__main__":
