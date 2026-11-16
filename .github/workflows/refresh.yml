@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 240
     env:
-      JIAKAO_DATA: ${{ runner.temp }}/jiakao-data
+      JIAKAO_DATA: /tmp/jiakao-data
       JIAKAO_REPO: ${{ github.workspace }}
       PYTHONUNBUFFERED: "1"
     steps:
