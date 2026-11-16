@@ -10,7 +10,7 @@ import time
 import urllib.parse
 import urllib.request
 
-REPO = os.path.expanduser("~/jiakao/repo")
+REPO = os.path.expanduser(os.environ.get("JIAKAO_REPO", "~/jiakao/repo"))
 MANIFEST = os.path.join(REPO, "clean", "media-manifest.json")
 MEDIA = os.path.join(REPO, "media")
 

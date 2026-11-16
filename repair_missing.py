@@ -9,7 +9,7 @@ import json
 import os
 import time
 
-DATA = os.path.expanduser("~/jiakao/data")
+DATA = os.path.expanduser(os.environ.get("JIAKAO_DATA", "~/jiakao/data"))
 TIKU = "https://jk-tiku.kakamobi.cn/api/web"
 
 

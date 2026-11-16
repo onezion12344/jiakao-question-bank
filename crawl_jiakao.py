@@ -22,7 +22,7 @@ import time
 import urllib.parse
 import urllib.request
 
-OUT = os.path.expanduser("~/jiakao/data")
+OUT = os.path.expanduser(os.environ.get("JIAKAO_DATA", "~/jiakao/data"))
 os.makedirs(OUT, exist_ok=True)
 
 API2 = "https://api2.jiakaobaodian.com/api/open"

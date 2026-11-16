@@ -9,7 +9,7 @@ import json
 import os
 import sys
 
-sys.path.insert(0, os.path.expanduser("~/jiakao"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from crawl_jiakao import collect_ids, fetch_details, log, OUT, CARTYPES  # noqa: E402
 
 

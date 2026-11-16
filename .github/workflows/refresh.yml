@@ -1,0 +1,81 @@
+name: refresh-question-bank
+
+# 每周一 02:17 HKT（周日 18:17 UTC）自动重爬；也可以在 Actions 页面手动触发。
+on:
+  schedule:
+    - cron: "17 18 * * 0"
+  workflow_dispatch:
+    inputs:
+      probe_only:
+        description: "只测连通性，不爬取"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-question-bank
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      JIAKAO_DATA: ${{ runner.temp }}/jiakao-data
+      JIAKAO_REPO: ${{ github.workspace }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 连通性探测
+        run: python3 probe.py
+
+      - name: 爬取 科目一/科目四（9 车型）
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: python3 crawl_jiakao.py
+
+      - name: 爬取 从业资格证（5 车型）
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: python3 crawl_jiakao_round2.py
+
+      - name: 差集与单题修复
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: |
+          python3 make_missing.py
+          python3 repair_missing.py
+          python3 repair_missing.py
+
+      - name: 重建 NDJSON / index.json / README
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: python3 build_repo.py
+
+      - name: 同步原始数据存档
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: |
+          mkdir -p data-raw
+          cp -f "$JIAKAO_DATA"/ids-*.json "$JIAKAO_DATA"/meta-*.json \
+                "$JIAKAO_DATA"/summary.json data-raw/ 2>/dev/null || true
+
+      - name: 下载新增配图（已有文件自动跳过）
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: python3 crawl_media.py
+
+      - name: 有变更才提交
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "题库无变化，跳过提交"
+            exit 0
+          fi
+          total=$(python3 -c "import json;d=json.load(open('index.json'));print(sum(s['questions'] for s in d['sets'].values()))")
+          git commit -m "chore: 自动刷新题库 $(date -u +%F) — ${total} 题"
+          git push

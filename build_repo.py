@@ -14,10 +14,12 @@ import glob
 import json
 import os
 import re
+import time
 from collections import Counter
 
-DATA = os.path.expanduser("~/jiakao/data")
-REPO = os.path.expanduser("~/jiakao/repo")
+DATA = os.path.expanduser(os.environ.get("JIAKAO_DATA", "~/jiakao/data"))
+REPO = os.path.expanduser(os.environ.get("JIAKAO_REPO", "~/jiakao/repo"))
+TODAY = os.environ.get("JIAKAO_DATE") or time.strftime("%Y-%m-%d", time.gmtime())
 os.makedirs(os.path.join(REPO, "clean"), exist_ok=True)
 
 COURSE_NAMES = {"kemu1": "科目一", "kemu3": "科目四", "zigezheng": "从业资格证"}
@@ -43,9 +45,43 @@ def to_answer_letters(bits):
     return [letter for bit, letter in ANSWER_BITS if bits & bit]
 
 
+def qid_key(r):
+    try:
+        return int(r.get("questionId") or r.get("id") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def count_media_files():
+    n = 0
+    for _, _, files in os.walk(os.path.join(REPO, "media")):
+        n += sum(1 for f in files if not f.endswith(".part"))
+    return n
+
+
+def update_readme(index, total, media_files):
+    """Rewrite the 题量 table + crawl date in README.md so they never go stale."""
+    path = os.path.join(REPO, "README.md")
+    if not os.path.exists(path):
+        return
+    text = open(path, encoding="utf-8").read()
+    rows = "\n".join(
+        "| {} | {} | {} |".format(s["carName"], s["courseName"], s["questions"])
+        for s in index["sets"].values()
+    )
+    block = ("## 题量\n\n| 车型 | 科目 | 题量 |\n|---|---|---|\n" + rows +
+             f"\n\n**合计 {total} 题**，{media_files:,} 张配图"
+             f"（~100MB，`media/` 已本地化）。")
+    new = re.sub(r"## 题量\n.*?(?=\n## )", block + "\n", text, count=1, flags=re.S)
+    new = re.sub(r"数据于 \d{4}-\d{2}-\d{2}", f"数据于 {TODAY}", new)
+    if new != text:
+        open(path, "w", encoding="utf-8").write(new)
+        print("README updated")
+
+
 def main():
     index = {"source": "驾考宝典 (jiakaobaodian.com) via api2.jiakaobaodian.com",
-             "crawled": "2026-11-16", "sets": {}}
+             "crawled": TODAY, "sets": {}}
     media_manifest = {}
     chapter_titles = {}
 
@@ -58,6 +94,7 @@ def main():
         name = os.path.basename(fq)[len("questions-"):-5]
         car_type, course = name.rsplit("-", 1)
         rows = json.load(open(fq))
+        rows.sort(key=qid_key)  # deterministic order -> real diffs between refreshes
         out = open(os.path.join(REPO, "clean", f"{name}.ndjson"), "w", encoding="utf-8")
         seen = set()
         stats = Counter()
@@ -105,7 +142,9 @@ def main():
     index["mediaImages"] = len(media_manifest)
     json.dump(index, open(os.path.join(REPO, "index.json"), "w"), ensure_ascii=False, indent=1)
     print(f"distinct media files: {len(media_manifest)}")
-    print("total:", sum(s["questions"] for s in index["sets"].values()))
+    total = sum(s["questions"] for s in index["sets"].values())
+    print("total:", total)
+    update_readme(index, total, count_media_files())
 
 
 if __name__ == "__main__":
