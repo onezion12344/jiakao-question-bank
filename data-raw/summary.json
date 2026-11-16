@@ -1,0 +1,42 @@
+{
+ "car-kemu1": {
+  "ids": 1702,
+  "fetched": 1702,
+  "chapters": 6
+ },
+ "car-kemu3": {
+  "ids": 1416,
+  "fetched": 1416,
+  "chapters": 9
+ },
+ "bus-kemu1": {
+  "ids": 2363,
+  "fetched": 2358,
+  "chapters": 7
+ },
+ "bus-kemu3": {
+  "ids": 747,
+  "fetched": 567,
+  "chapters": 8
+ },
+ "truck-kemu1": {
+  "ids": 2422,
+  "fetched": 2421,
+  "chapters": 7
+ },
+ "truck-kemu3": {
+  "ids": 2848,
+  "fetched": 1928,
+  "chapters": 9
+ },
+ "moto-kemu1": {
+  "ids": 513,
+  "fetched": 513,
+  "chapters": 4
+ },
+ "moto-kemu3": {
+  "ids": 383,
+  "fetched": 383,
+  "chapters": 7
+ }
+}
